@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include "EngineMinimal.h"
+#include "ArenaBattle.h"
+#include "GameFramework/RotatingMovementComponent.h"
 #include "GameFramework/Actor.h"
 #include "Fountain.generated.h"
 
@@ -10,16 +11,17 @@ UCLASS()
 class ARENABATTLE_API AFountain : public AActor
 {
 	GENERATED_BODY()
-	
-public:	
+
+public:
 	// Sets default values for this actor's properties
 	AFountain();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-public:	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override; //오버라이딩 해서 언제 호출되는지 볼거임
+	virtual void PostInitializeComponents() override;
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -37,4 +39,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = ID)
 	int32 ID;
+
+	UPROPERTY(VisibleAnywhere)
+	URotatingMovementComponent* Movement;
+
+private:
+	UPROPERTY(EditAnywhere, Category = Stat, Meta = (AllowPrivateAccess = true))
+	float RotateSpeed;
 };
