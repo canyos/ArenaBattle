@@ -1,11 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ABGameMode.h"
-#include "ABPawn.h"
+#include "ABCharacter.h"
 #include "ABPlayerController.h"
 
 AABGameMode::AABGameMode() {
-	DefaultPawnClass = AABPawn::StaticClass();//staticclass 호출로 클래스 연결
+	DefaultPawnClass = AABCharacter::StaticClass();//staticclass 호출로 클래스 연결
 	PlayerControllerClass = AABPlayerController::StaticClass();
 
 	/*static ConstructorHelpers::FClassFinder<APawn> BP_PAWN_C(TEXT("/Game/ThirdPersonBP/Blueprints/ThirdPersonCharacter.ThirdPersonCharacter_C"));
