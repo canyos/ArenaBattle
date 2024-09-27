@@ -35,6 +35,7 @@ AABCharacter::AABCharacter()
 
 	ArmLengthSpeed = 3.0f;
 	ArmRotationSpeed = 10.0f;
+	GetCharacterMovement()->JumpZVelocity = 800.0f; //점프높이 800
 }
 
 // Called when the game starts or when spawned
@@ -48,10 +49,14 @@ void AABCharacter::BeginPlay()
 void AABCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	SpringArm->TargetArmLength = FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, DeltaTime, ArmLengthSpeed);
+	SpringArm->TargetArmLength = 
+		FMath::FInterpTo(SpringArm->TargetArmLength, ArmLengthTo, 
+			DeltaTime, ArmLengthSpeed);
 	switch (CurrentControlMode) {
 	case EControlMode::DIABLO:
-		SpringArm->RelativeRotation = FMath::RInterpTo(SpringArm->RelativeRotation, ArmRotationTo, DeltaTime, ArmRotationSpeed);
+		SpringArm->RelativeRotation = 
+			FMath::RInterpTo(SpringArm->RelativeRotation, ArmRotationTo, 
+				DeltaTime, ArmRotationSpeed);
 		break;
 	}
 	switch (CurrentControlMode) {
@@ -70,7 +75,8 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAction(TEXT("VIEWCHANGE"), EInputEvent::IE_Pressed, this, &AABCharacter::ViewChange); //viewChange함수 바인딩
+	PlayerInputComponent->BindAction(TEXT("ViewChange"), EInputEvent::IE_Pressed, this, &AABCharacter::ViewChange); //viewChange함수 바인딩
+	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AABCharacter::Jump);
 
 	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AABCharacter::UpDown);//Updown BindAxis와 함수 UpDown연결
 	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AABCharacter::LeftRight);
