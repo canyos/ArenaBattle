@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "ABCharacter.h"
-
+#include "ABAnimInstance.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -36,6 +36,10 @@ AABCharacter::AABCharacter()
 	ArmLengthSpeed = 3.0f;
 	ArmRotationSpeed = 10.0f;
 	GetCharacterMovement()->JumpZVelocity = 800.0f; //점프높이 800
+	IsAttacking = false;
+
+	MaxCombo = 4;
+	AttackEndComboState();
 }
 
 // Called when the game starts or when spawned
@@ -70,6 +74,25 @@ void AABCharacter::Tick(float DeltaTime)
 	
 }
 
+void AABCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	ABAnim = Cast<UABAnimInstance>(GetMesh()->GetAnimInstance());
+	ABCHECK(ABAnim != nullptr);
+
+	ABAnim->OnMontageEnded.AddDynamic(this, &AABCharacter::OnAttackMontageEnded);
+	ABAnim->OnNextAttackCheck.AddLambda([this]() -> void {
+		ABLOG(Warning, TEXT("OnNextAttackCheck"));
+		CanNextCombo = false;
+		
+		if (IsComboInputOn) {
+			AttackStartComboState();
+			ABAnim->JumpToAttackMontageSection(CurrentCombo);
+		}
+		});
+
+}
+
 // Called to bind functionality to input
 void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -77,6 +100,7 @@ void AABCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 
 	PlayerInputComponent->BindAction(TEXT("ViewChange"), EInputEvent::IE_Pressed, this, &AABCharacter::ViewChange); //viewChange함수 바인딩
 	PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &AABCharacter::Jump);
+	PlayerInputComponent->BindAction(TEXT("Attack"), EInputEvent::IE_Pressed, this, &AABCharacter::Attack);
 
 	PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AABCharacter::UpDown);//Updown BindAxis와 함수 UpDown연결
 	PlayerInputComponent->BindAxis(TEXT("LeftRight"), this, &AABCharacter::LeftRight);
@@ -144,6 +168,47 @@ void AABCharacter::ViewChange()
 		break;
 	}
 }
+void AABCharacter::Attack()
+{
+	if (IsAttacking) {//공격 중이면
+		ABCHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 1, MaxCombo));
+		if (CanNextCombo) {
+			IsComboInputOn = true; //다음콤보 실행
+		}
+	}
+	else { //공격중 아니면
+		ABCHECK(CurrentCombo == 0);
+		AttackStartComboState(); //콤보 실행
+		ABAnim->PlayAttackMontage(); //몽타주실행
+		ABAnim->JumpToAttackMontageSection(CurrentCombo); //현재 콤보 섹션으로 점프
+		IsAttacking = true;
+	}
+}
+
+void AABCharacter::OnAttackMontageEnded(UAnimMontage * Montage, bool bInterrupted)
+{
+	ABCHECK(IsAttacking);
+	ABCHECK(CurrentCombo > 0);
+
+	IsAttacking = false;
+	AttackEndComboState();
+}
+
+void AABCharacter::AttackStartComboState()
+{
+	CanNextCombo = true;
+	IsComboInputOn = false;
+	ABCHECK(FMath::IsWithinInclusive<int32>(CurrentCombo, 0, MaxCombo - 1)); //current가 맥스보다 작은지 체크
+	CurrentCombo = FMath::Clamp<int32>(CurrentCombo + 1, 1, MaxCombo); //current증가
+}
+
+void AABCharacter::AttackEndComboState()
+{
+	IsComboInputOn = true;
+	CanNextCombo = false;
+	CurrentCombo = 0;
+}
+
 void AABCharacter::SetControlMode(EControlMode ControlMode)
 {
 	CurrentControlMode = ControlMode;
