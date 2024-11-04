@@ -16,6 +16,8 @@ class ARENABATTLE_API AABCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AABCharacter();
+	void SetCharacterState(ECharacterState NewState);
+	ECharacterState GetCharacterState() const;
 
 protected:
 	// Called when the game starts or when spawned
@@ -39,8 +41,7 @@ public:
 		class UWidgetComponent* HPBarWidget;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-	virtual void PossessedBy(AController* NewController) override;
-
+	
 	bool CanSetWeapon();
 	void SetWeapon(class AABWeapon* NewWeapon);
 	UPROPERTY(VisibleAnywhere, Category = weapon)
@@ -51,6 +52,7 @@ public:
 
 	void Attack();
 	FOnAttackEndDelegate OnAttackEnd;
+	
 
 private:
 	void UpDown(float NewAxisValue);
@@ -65,6 +67,8 @@ private:
 	void AttackStartComboState();
 	void AttackEndComboState();
 	void AttackCheck();
+
+	void OnAssetLoadCompleted();
 
 private : 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
@@ -83,6 +87,24 @@ private :
 		float AttackRange;
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = true))
 		float AttackRadius;
+
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = true))
+		ECharacterState CurrentState;
+	UPROPERTY(Transient, VisibleInstanceOnly, BlueprintReadOnly, Category = State, Meta = (AllowPrivateAccess = true))
+		bool bIsPlayer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = State, Meta = (AllowPrivateAccess = true))
+		float DeadTimer;
+
+	UPROPERTY()
+		class AABAIController* ABAIController;
+	UPROPERTY()
+		class AABPlayerController* ABPlayerController;
+
+	FTimerHandle DeadTimerHandle = {};
+
+	int32 AssetIndex = 0;
+	FSoftObjectPath CharacterAssetToLoad = FSoftObjectPath(nullptr);
+	TSharedPtr<struct FStreamableHandle> AssetStreamingHandle;
 	
 protected:
 	enum class EControlMode {

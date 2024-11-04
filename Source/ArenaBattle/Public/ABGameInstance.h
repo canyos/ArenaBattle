@@ -5,6 +5,7 @@
 #include "ArenaBattle.h"
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
+#include "Engine/StreamableManager.h"
 #include "ABGameInstance.generated.h"
 
 /**
@@ -45,6 +46,8 @@ class ARENABATTLE_API UABGameInstance : public UGameInstance
 public:
 	UABGameInstance();
 	FABCharacterData* GetABCharacterData(int32 Level);
+
+	FStreamableManager StreamableManager;
 private:
 	virtual void Init() override;
 	

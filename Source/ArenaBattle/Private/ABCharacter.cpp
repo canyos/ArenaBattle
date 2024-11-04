@@ -8,6 +8,9 @@
 #include "Components/WidgetComponent.h"
 #include "ABCharacterWidget.h"
 #include "ABAIController.h"
+#include "ABCharacterSetting.h"
+#include "ABGameInstance.h"
+#include "ABPlayerController.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -72,6 +75,90 @@ AABCharacter::AABCharacter()
 
 	AIControllerClass = AABAIController::StaticClass();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+
+	auto DefaultSetting = GetDefault<UABCharacterSetting>();
+	if (DefaultSetting->CharacterAssets.Num() > 0) {
+		for (auto CharacterAsset : DefaultSetting->CharacterAssets) {
+			ABLOG(Warning, TEXT("Character Asset : %s"), *CharacterAsset.ToString());
+		}
+	}
+
+	AssetIndex = 4;
+
+	SetActorHiddenInGame(true);//º¸ÀÌÁö ¾Ê°Ô ¼û±è
+	HPBarWidget->SetHiddenInGame(true);
+	bCanBeDamaged = false; 
+
+	//DeadTimer = 5.0f;
+}
+
+void AABCharacter::SetCharacterState(ECharacterState NewState)
+{
+	ABCHECK(NewState != CurrentState);
+	CurrentState = NewState;
+
+	switch (CurrentState) {
+	case ECharacterState::LOADING: {
+		if (bIsPlayer)
+			DisableInput(ABPlayerController);
+		SetActorHiddenInGame(true);
+		HPBarWidget->SetHiddenInGame(true);
+		bCanBeDamaged = false;
+		break;
+	}
+		
+	case ECharacterState::READY: {
+		SetActorHiddenInGame(false);
+		HPBarWidget->SetHiddenInGame(false);
+		bCanBeDamaged = true;
+		CharacterStat->OnHPIsZero.AddLambda([this]()->void {
+			SetCharacterState(ECharacterState::DEAD);
+			});
+
+		auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
+
+		ABCHECK(CharacterWidget != nullptr);
+		CharacterWidget->BindCharacterStat(CharacterStat);
+		if (bIsPlayer) {
+			SetControlMode(EControlMode::DIABLO);
+			GetCharacterMovement()->MaxWalkSpeed = 600.0f;
+			EnableInput(ABPlayerController);
+		}
+		else {
+			SetControlMode(EControlMode::NPC);
+			GetCharacterMovement()->MaxWalkSpeed = 400.0f;
+			ABAIController->RunAI();
+		}
+		break;
+	}
+
+	case ECharacterState::DEAD: {
+		SetActorEnableCollision(false);
+		GetMesh()->SetHiddenInGame(false);
+		HPBarWidget->SetHiddenInGame(true);
+		ABAnim->SetDeadAnim();
+		bCanBeDamaged = false;
+
+		if (bIsPlayer)
+			DisableInput(ABPlayerController);
+		else
+			ABAIController->StopAI();
+
+		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]()->void {
+			if (bIsPlayer)
+				ABPlayerController->RestartLevel();
+			else
+				Destroy();
+		}),DeadTimer,false);
+		break;
+	}
+		
+	}
+}
+
+ECharacterState AABCharacter::GetCharacterState() const
+{
+	return CurrentState;
 }
 
 // Called when the game starts or when spawned
@@ -79,13 +166,31 @@ void AABCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	FName WeaponSocket(TEXT("hand_rSocket"));
-	auto CurWeapon = GetWorld()->SpawnActor<AABWeapon>(FVector::ZeroVector, FRotator::ZeroRotator);
-	if (CurWeapon == nullptr) {
-		CurWeapon->AttachToComponent(GetMesh(), 
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
-			WeaponSocket);
+	bIsPlayer = IsPlayerControlled();
+	if (bIsPlayer) {
+		ABPlayerController = Cast<AABPlayerController>(GetController());
+		ABCHECK(ABPlayerController != nullptr);
 	}
+	else {
+		ABAIController = Cast<AABAIController>(GetController());
+		ABCHECK(ABAIController != nullptr);
+	}
+
+	auto DefaultSetting = GetDefault<UABCharacterSetting>();
+	if (bIsPlayer) {
+		AssetIndex = 4;
+	}
+	else {
+		AssetIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
+	}
+	CharacterAssetToLoad = DefaultSetting->CharacterAssets[AssetIndex];
+	auto ABGameInstance = Cast<UABGameInstance>(GetGameInstance());
+	ABCHECK(ABGameInstance != nullptr);
+	AssetStreamingHandle = ABGameInstance->StreamableManager.RequestAsyncLoad(
+		CharacterAssetToLoad,
+		FStreamableDelegate::CreateUObject(this, &AABCharacter::OnAssetLoadCompleted)
+	);
+	SetCharacterState(ECharacterState::LOADING);
 }
 
 // Called every frame
@@ -128,19 +233,10 @@ void AABCharacter::PostInitializeComponents()
 			AttackStartComboState();
 			ABAnim->JumpToAttackMontageSection(CurrentCombo);
 		}
-		});
+	});
 
 	ABAnim->OnAttackHitCheck.AddUObject(this, &AABCharacter::AttackCheck);
-	CharacterStat->OnHPIsZero.AddLambda([this]()-> void {
-		ABLOG(Warning, TEXT("OnHPIsZero"));
-		ABAnim->SetDeadAnim();
-		SetActorEnableCollision(false);
-		});
-
-	auto CharacterWidget = Cast<UABCharacterWidget>(HPBarWidget->GetUserWidgetObject());
-	if (CharacterWidget != nullptr) {
-		CharacterWidget->BindCharacterStat(CharacterStat);
-	}
+	
 }
 
 // Called to bind functionality to input
@@ -164,20 +260,6 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
 	CharacterStat->SetDamage(FinalDamage);
 	return FinalDamage;
-}
-
-void AABCharacter::PossessedBy(AController * NewController)
-{
-	Super::PossessedBy(NewController);
-
-	if (IsPlayerControlled()) {
-		SetControlMode(EControlMode::DIABLO);
-		GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-	}
-	else {
-		SetControlMode(EControlMode::NPC);
-		GetCharacterMovement()->MaxWalkSpeed = 300.0f;
-	}
 }
 
 bool AABCharacter::CanSetWeapon()
@@ -336,6 +418,17 @@ void AABCharacter::AttackCheck()
 			HitResult.Actor->TakeDamage(CharacterStat->GetAttack(), DamageEvent, GetController(), this);
 		}
 	}
+
+}
+
+void AABCharacter::OnAssetLoadCompleted()
+{
+	USkeletalMesh* AssetLoaded = Cast<USkeletalMesh>(AssetStreamingHandle->GetLoadedAsset());
+	AssetStreamingHandle.Reset();
+	ABCHECK(AssetLoaded != nullptr);
+	GetMesh()->SetSkeletalMesh(AssetLoaded);
+	
+	SetCharacterState(ECharacterState::READY);
 
 }
 
