@@ -19,11 +19,12 @@ public:
 	UABCharacterStatComponent();
 	void SetNewLevel(int32 NewLevel);
 	void SetDamage(float NewDamage);
-	float GetAttack();
-	FOnHPIsZeroDelegate OnHPIsZero;
-
 	void SetHP(float NewHP);
-	float GetHPRatio();
+
+	float GetAttack()const;
+	float GetHPRatio()const;
+	int32 GetDropExp()const;
+	FOnHPIsZeroDelegate OnHPIsZero;
 	FOnHPChangedDelegate OnHPChanged;
 
 protected:

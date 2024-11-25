@@ -15,7 +15,7 @@
 USTRUCT(BlueprintType)
 struct FABCharacterData : public FTableRowBase
 {
-	GENERATED_BODY();
+	GENERATED_BODY()
 
 public:
 	FABCharacterData() : Level(1), MaxHP(100.0f), Attack(10.0f), 

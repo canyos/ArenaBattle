@@ -11,6 +11,8 @@
 #include "ABCharacterSetting.h"
 #include "ABGameInstance.h"
 #include "ABPlayerController.h"
+#include "ABPlayerState.h"
+#include "ABHUDWidget.h"
 
 // Sets default values
 AABCharacter::AABCharacter()
@@ -89,7 +91,7 @@ AABCharacter::AABCharacter()
 	HPBarWidget->SetHiddenInGame(true);
 	bCanBeDamaged = false; 
 
-	//DeadTimer = 5.0f;
+	DeadTimer = 5.0f;
 }
 
 void AABCharacter::SetCharacterState(ECharacterState NewState)
@@ -99,8 +101,16 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 
 	switch (CurrentState) {
 	case ECharacterState::LOADING: {
-		if (bIsPlayer)
+		if (bIsPlayer) {
 			DisableInput(ABPlayerController);
+
+			ABPlayerController->GetHUDWidget()->BindCharacterStat(CharacterStat);
+
+			auto ABPlayerState = Cast<AABPlayerState>(PlayerState);
+			ABCHECK(ABPlayerState != nullptr);
+			CharacterStat->SetNewLevel(ABPlayerState->GetCharacterLevel());
+		}
+			
 		SetActorHiddenInGame(true);
 		HPBarWidget->SetHiddenInGame(true);
 		bCanBeDamaged = false;
@@ -144,7 +154,9 @@ void AABCharacter::SetCharacterState(ECharacterState NewState)
 		else
 			ABAIController->StopAI();
 
-		GetWorld()->GetTimerManager().SetTimer(DeadTimerHandle, FTimerDelegate::CreateLambda([this]()->void {
+		GetWorld()->GetTimerManager().SetTimer(
+			DeadTimerHandle, 
+			FTimerDelegate::CreateLambda([this]()->void {
 			if (bIsPlayer)
 				ABPlayerController->RestartLevel();
 			else
@@ -259,6 +271,13 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
 	CharacterStat->SetDamage(FinalDamage);
+	if (CurrentState == ECharacterState::DEAD) {
+		if (EventInstigator->IsPlayerController()) {
+			auto ABPlayerController = Cast<AABPlayerController>(EventInstigator);
+			ABCHECK(ABPlayerController != nullptr, 0.0f);
+			ABPlayerController->NPCKill(this);
+		}
+	}
 	return FinalDamage;
 }
 
@@ -353,6 +372,11 @@ void AABCharacter::Attack()
 		ABAnim->JumpToAttackMontageSection(CurrentCombo); //현재 콤보 섹션으로 점프
 		IsAttacking = true;
 	}
+}
+
+int32 AABCharacter::GetExp() const
+{
+	return CharacterStat->GetDropExp();
 }
 
 void AABCharacter::OnAttackMontageEnded(UAnimMontage * Montage, bool bInterrupted)
