@@ -25,6 +25,7 @@ public:
 	void AddGameScore() const;
 	void ChangeInputMode(bool GameMode = true);
 	void ShowResultUI();
+	class AABPlayerState* GetPlayerState() { return ABPlayerState; }
 
 protected:
 	virtual void BeginPlay() override;

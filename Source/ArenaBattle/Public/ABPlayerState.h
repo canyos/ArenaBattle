@@ -46,10 +46,12 @@ protected:
 	
 	UPROPERTY(Transient)
 		int32 Exp;
+
 	UPROPERTY(Transient)
 		int32 CharacterIndex;
 
 private:
 	void SetCharacterLevel(int32 NewCharacterLevel);
+
 	struct FABCharacterData* CurrentStatData;
 };

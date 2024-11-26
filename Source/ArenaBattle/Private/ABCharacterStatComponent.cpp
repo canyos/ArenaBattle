@@ -15,6 +15,11 @@ UABCharacterStatComponent::UABCharacterStatComponent()
 	Level = 1;
 }
 
+void UABCharacterStatComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	SetNewLevel(Level);
+}
 
 void UABCharacterStatComponent::SetNewLevel(int32 NewLevel)
 {
@@ -26,6 +31,7 @@ void UABCharacterStatComponent::SetNewLevel(int32 NewLevel)
 	if (CurrentStatData != nullptr) {
 		Level = NewLevel;
 		SetHP(CurrentStatData->MaxHP);
+		ABLOG(Warning, TEXT("LevelUp , HP : %f"), CurrentHP);
 	}
 	else {
 		ABLOG(Error, TEXT("Level (%d) data doesn't exist"), NewLevel);
@@ -48,9 +54,9 @@ float UABCharacterStatComponent::GetAttack()const
 void UABCharacterStatComponent::SetHP(float NewHP)
 {
 	CurrentHP = NewHP;
-	ABLOG(Warning, TEXT("Cur HP : %f"), CurrentHP);
 	OnHPChanged.Broadcast();
-	if (CurrentHP < KINDA_SMALL_NUMBER) {
+	if (CurrentHP < KINDA_SMALL_NUMBER)
+	{
 		CurrentHP = 0.0f;
 		OnHPIsZero.Broadcast();
 	}
@@ -77,10 +83,7 @@ void UABCharacterStatComponent::BeginPlay()
 	
 }
 
-void UABCharacterStatComponent::InitializeComponent()
-{
-	Super::InitializeComponent();
-}
+
 
 
 

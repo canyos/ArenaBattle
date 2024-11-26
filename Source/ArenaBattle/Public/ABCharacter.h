@@ -47,6 +47,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = weapon)
 		class AABWeapon* CurrentWeapon;
 
+	class UABCharacterStatComponent* GetCharacterStat() { return CharacterStat; }
 	UPROPERTY(VisibleAnywhere, Category = Stat)
 	class UABCharacterStatComponent* CharacterStat;
 

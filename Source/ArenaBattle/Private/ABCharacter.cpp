@@ -205,10 +205,12 @@ void AABCharacter::BeginPlay()
 		auto ABPlayerState = Cast<AABPlayerState>(PlayerState);
 		ABCHECK(ABPlayerState != nullptr);
 		AssetIndex = ABPlayerState->GetCharacterIndex();
+		CharacterStat->SetNewLevel(ABPlayerState->GetCharacterLevel());
 	}
 	else {
 		AssetIndex = FMath::RandRange(0, DefaultSetting->CharacterAssets.Num() - 1);
 	}
+
 	CharacterAssetToLoad = DefaultSetting->CharacterAssets[AssetIndex];
 	auto ABGameInstance = Cast<UABGameInstance>(GetGameInstance());
 	ABCHECK(ABGameInstance != nullptr);
@@ -285,12 +287,18 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 	float FinalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
 	ABLOG(Warning, TEXT("Actor : %s took Damage : %f"), *GetName(), FinalDamage);
 	CharacterStat->SetDamage(FinalDamage);
+
 	if (CurrentState == ECharacterState::DEAD) {
 		if (EventInstigator->IsPlayerController()) {
 			auto ABPlayerController = Cast<AABPlayerController>(EventInstigator);
 			ABCHECK(ABPlayerController != nullptr, 0.0f);
+
 			if (ABPlayerController->NPCKill(this)) {
-				CharacterStat->SetNewLevel(CharacterStat->GetLevel() + 1);
+				auto ABPlayerState = ABPlayerController->GetPlayerState();
+				ABCHECK(ABPlayerState != nullptr,0.0f);
+
+				auto Player = Cast<AABCharacter>(ABPlayerController->GetCharacter());
+				Player->GetCharacterStat()->SetNewLevel(ABPlayerState->GetCharacterLevel());
 				ABLOG(Warning, TEXT("Level up (%d)"), CharacterStat->GetLevel());
 			}
 		}
@@ -298,7 +306,7 @@ float AABCharacter::TakeDamage(float DamageAmount, FDamageEvent const & DamageEv
 	return FinalDamage;
 }
 
-bool AABCharacter::CanSetWeapon()
+bool AABCharacter::CanSetWeapon() 
 {
 	return true;
 }

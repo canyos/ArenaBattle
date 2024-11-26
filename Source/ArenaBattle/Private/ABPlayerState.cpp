@@ -12,6 +12,7 @@ AABPlayerState::AABPlayerState() {
 	SaveSlotName = TEXT("Player1");
 	CharacterIndex = 0;
 }
+
 int32 AABPlayerState::GetGameScore() const
 {
 	return GameScore;
@@ -44,7 +45,7 @@ float AABPlayerState::GetExpRatio() const//경험치 비율 반환
 
 bool AABPlayerState::AddExp(int32 IncomeExp)//레벨업 체크
 {
-	if(CurrentStatData->NextExp==-1)
+	if (CurrentStatData->NextExp == -1)
 		return false;
 
 	bool DidLevelUp = false;

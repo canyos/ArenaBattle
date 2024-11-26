@@ -22,19 +22,19 @@ public:
 		DropExp(10), NextExp(30) {}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-		int32 Level;
+	int32 Level;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-		float MaxHP;
+	float MaxHP;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-		float Attack;
+	float Attack;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-		int32 DropExp;
+	int32 DropExp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Data")
-		int32 NextExp;
+	int32 NextExp;
 
 };
 
@@ -46,11 +46,10 @@ class ARENABATTLE_API UABGameInstance : public UGameInstance
 public:
 	UABGameInstance();
 	FABCharacterData* GetABCharacterData(int32 Level);
-
 	FStreamableManager StreamableManager;
+
 private:
 	virtual void Init() override;
-	
 
 private:
 	UPROPERTY()
