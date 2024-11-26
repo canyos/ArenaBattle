@@ -22,10 +22,10 @@ void UABCharacterStatComponent::SetNewLevel(int32 NewLevel)
 		(UGameplayStatics::GetGameInstance(GetWorld()));
 	ABCHECK(ABGameInstance != nullptr);
 	CurrentStatData = ABGameInstance->GetABCharacterData(NewLevel);
+
 	if (CurrentStatData != nullptr) {
 		Level = NewLevel;
 		SetHP(CurrentStatData->MaxHP);
-		CurrentHP = CurrentStatData->MaxHP;
 	}
 	else {
 		ABLOG(Error, TEXT("Level (%d) data doesn't exist"), NewLevel);
@@ -48,6 +48,7 @@ float UABCharacterStatComponent::GetAttack()const
 void UABCharacterStatComponent::SetHP(float NewHP)
 {
 	CurrentHP = NewHP;
+	ABLOG(Warning, TEXT("Cur HP : %f"), CurrentHP);
 	OnHPChanged.Broadcast();
 	if (CurrentHP < KINDA_SMALL_NUMBER) {
 		CurrentHP = 0.0f;

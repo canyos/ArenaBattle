@@ -1,0 +1,16 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-ArenaBattleSetting.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"E:\Epic Games\UE_4.19\Engine\Intermediate\Build\Win64\UE4Editor\Development\Engine\SharedPCH.Engine.h.obj"
+"E:\UnrealProjects\ArenaBattle\unreal-c-example-4.22v\Projects\Chapter15\Intermediate\Build\Win64\UE4Editor\Development\ArenaBattleSetting\ABCharacterSetting.cpp.obj"
+"E:\UnrealProjects\ArenaBattle\unreal-c-example-4.22v\Projects\Chapter15\Intermediate\Build\Win64\UE4Editor\Development\ArenaBattleSetting\ArenaBattleSetting.cpp.obj"
+"E:\UnrealProjects\ArenaBattle\unreal-c-example-4.22v\Projects\Chapter15\Intermediate\Build\Win64\UE4Editor\Development\ArenaBattleSetting\ABCharacterSetting.gen.cpp.obj"
+"E:\UnrealProjects\ArenaBattle\unreal-c-example-4.22v\Projects\Chapter15\Intermediate\Build\Win64\UE4Editor\Development\ArenaBattleSetting\ArenaBattleSetting.init.gen.cpp.obj"
+"E:\Epic Games\UE_4.19\Engine\Intermediate\Build\Win64\UE4Editor\Development\ArenaBattleSetting\PCLaunch.rc.res"
+"E:\Epic Games\UE_4.19\Engine\Intermediate\Build\Win64\UE4Editor\Development\ModuleVersionResource.rc.inl.res"
+/OUT:"E:\UnrealProjects\ArenaBattle\unreal-c-example-4.22v\Projects\Chapter15\Intermediate\Build\Win64\UE4Editor\Development\UE4Editor-ArenaBattleSetting.lib"

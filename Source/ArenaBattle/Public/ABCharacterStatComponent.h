@@ -18,6 +18,7 @@ public:
 	// Sets default values for this component's properties
 	UABCharacterStatComponent();
 	void SetNewLevel(int32 NewLevel);
+	int32 GetLevel() { return Level; }
 	void SetDamage(float NewDamage);
 	void SetHP(float NewHP);
 
@@ -34,9 +35,9 @@ protected:
 	
 private:
 	struct FABCharacterData* CurrentStatData = nullptr;
-	UPROPERTY(EditInstanceOnly, Category = stat, Meta = (AllowPricvateAccess = true))
+	UPROPERTY(EditInstanceOnly, Category = stat, Meta = (AllowPrivateAccess = true))
 		int32 Level;
-	UPROPERTY(Transient, VisibleAnywhere, Category = Stat, Meta = (AllowPricvateAccess = true))
+	UPROPERTY(Transient, VisibleInstanceOnly, Category = Stat, Meta = (AllowPrivateAccess = true))
 		float CurrentHP;
 	
 };
